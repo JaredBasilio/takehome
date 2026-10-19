@@ -7,10 +7,23 @@ class NotificationScope(BaseModel):
     queue_ids: Optional[List[str]] = None
 
 
+class ConfigAssignment(BaseModel):
+    """
+    One assignment of a NotificationConfig to a recipient. Stored as a row in
+    `config_assignments(config_id, recipient_id)`. Modeled as its own class so
+    future per-assignment attributes can be added without a schema change to
+    NotificationConfig (e.g. is_enabled, interfaces, priority, snooze_until).
+    """
+    recipient_id: str                      # who receives notifications from this config
+    # Future: is_enabled: bool = True
+    # Future: interfaces: List[str] = ["in_app"]  # delivery channels: "in_app", "slack", "email"
+    # Future: priority: str = "normal"
+
+
 class NotificationConfig(BaseModel):
     id: str
-    owner_id: str
-    assigned_to_recipient_ids: List[str]
+    owner_id: str                          # who created and can edit/delete this config
+    assignments: List[ConfigAssignment]    # who receives notifications; one row per recipient in config_assignments
     label: str
     event_type: str  # "queue_snapshot" | "agent_state_change" | "adherence_check"
     field: str
