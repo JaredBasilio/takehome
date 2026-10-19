@@ -7,3 +7,6 @@ dist/
 *.egg-info/
 .env
 .vite/
+*.db
+*.db-shm
+*.db-wal
