@@ -146,7 +146,7 @@ def test_shared_config_visible_to_recipient_but_not_others(client):
         "comparator": "eq",
         "value": True,
         "value_mode": "absolute",
-        "scope": {"agent_ids": ["a_19", "a_07"]},
+        "scope": {"queue_ids": ["billing"]},
     })
     config_id = create.json()["id"]
     client.post(f"/api/users/u_3/configs/{config_id}/push")
@@ -210,6 +210,40 @@ def test_team_lead_cannot_scope_outside_managed_queues(client):
         "scope": {"queue_ids": ["unmanaged_queue"]},
     })
     assert resp.status_code == 403
+
+
+def test_team_lead_cannot_scope_to_agent_outside_managed_queues(client):
+    """Priya manages billing and tier_2. She cannot scope a rule to an agent not in those queues."""
+    # u_4 (Jordan) is head_of_support with no queue memberships — not in Priya's queues
+    resp = client.post("/api/users/u_3/configs", json={
+        "label": "Bad agent scope",
+        "event_type": "adherence_check",
+        "field": "in_violation",
+        "comparator": "eq",
+        "value": True,
+        "value_mode": "absolute",
+        "scope": {"agent_ids": ["u_4"]},
+    })
+    assert resp.status_code == 403
+
+
+def test_team_lead_can_scope_to_agent_in_managed_queue(client):
+    """Priya can scope a rule to an agent who belongs to one of her queues."""
+    # First give a_19 membership in billing so the scope check passes
+    import store.db as db_mod
+    with db_mod._db() as con:
+        con.execute("INSERT OR IGNORE INTO user_queue_memberships VALUES (?, ?)", ("a_19", "billing"))
+
+    resp = client.post("/api/users/u_3/configs", json={
+        "label": "Watch Sarah",
+        "event_type": "adherence_check",
+        "field": "in_violation",
+        "comparator": "eq",
+        "value": True,
+        "value_mode": "absolute",
+        "scope": {"agent_ids": ["a_19"]},
+    })
+    assert resp.status_code == 201
 
 
 def test_only_team_leads_can_push_configs(client):
