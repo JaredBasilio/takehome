@@ -77,24 +77,13 @@ def init_db() -> None:
                 last_seen_at TEXT NOT NULL,
                 message TEXT NOT NULL,
                 read INTEGER NOT NULL DEFAULT 0,
-                is_shared INTEGER NOT NULL DEFAULT 0
-            );
-            CREATE TABLE IF NOT EXISTS notification_history (
-                id TEXT PRIMARY KEY,
-                user_id TEXT NOT NULL,
-                config_id TEXT NOT NULL,
-                config_label TEXT NOT NULL,
-                triggered_by_event_id TEXT NOT NULL,
-                triggered_at TEXT NOT NULL,
-                last_seen_at TEXT NOT NULL,
-                message TEXT NOT NULL,
-                read INTEGER NOT NULL DEFAULT 0,
                 is_shared INTEGER NOT NULL DEFAULT 0,
+                status TEXT NOT NULL DEFAULT 'active',
                 resolved_at TEXT,
                 resolved_by_event_id TEXT
             );
             CREATE INDEX IF NOT EXISTS idx_notif_user ON notifications(user_id);
-            CREATE INDEX IF NOT EXISTS idx_hist_user ON notification_history(user_id);
+            CREATE INDEX IF NOT EXISTS idx_notif_status ON notifications(user_id, status);
         """)
 
         if con.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0:

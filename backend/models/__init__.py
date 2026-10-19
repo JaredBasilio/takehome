@@ -1,6 +1,6 @@
 from .user import User
 from .config import NotificationScope, NotificationConfig, CreateConfigRequest
-from .notification import Notification, NotificationHistoryItem
+from .notification import Notification
 
 __all__ = [
     "User",
@@ -8,5 +8,4 @@ __all__ = [
     "NotificationConfig",
     "CreateConfigRequest",
     "Notification",
-    "NotificationHistoryItem",
 ]
