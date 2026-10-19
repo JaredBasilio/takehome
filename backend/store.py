@@ -41,13 +41,13 @@ def init_db() -> None:
     with _db() as con:
         con.executescript("""
             CREATE TABLE IF NOT EXISTS users (
-                user_id TEXT PRIMARY KEY,
+                id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
                 role TEXT NOT NULL,
                 manages_queue_ids TEXT
             );
             CREATE TABLE IF NOT EXISTS notification_configs (
-                config_id TEXT PRIMARY KEY,
+                id TEXT PRIMARY KEY,
                 user_id TEXT NOT NULL,
                 assigned_to_user_ids TEXT NOT NULL,
                 label TEXT NOT NULL,
@@ -61,7 +61,7 @@ def init_db() -> None:
                 is_shared INTEGER NOT NULL DEFAULT 0
             );
             CREATE TABLE IF NOT EXISTS notifications (
-                notification_id TEXT PRIMARY KEY,
+                id TEXT PRIMARY KEY,
                 user_id TEXT NOT NULL,
                 config_id TEXT NOT NULL,
                 config_label TEXT NOT NULL,
@@ -73,7 +73,7 @@ def init_db() -> None:
                 is_shared INTEGER NOT NULL DEFAULT 0
             );
             CREATE TABLE IF NOT EXISTS notification_history (
-                notification_id TEXT PRIMARY KEY,
+                id TEXT PRIMARY KEY,
                 user_id TEXT NOT NULL,
                 config_id TEXT NOT NULL,
                 config_label TEXT NOT NULL,
@@ -129,7 +129,7 @@ def save_config(config: dict) -> None:
     with _db() as con:
         con.execute(
             "INSERT OR REPLACE INTO notification_configs VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-            (config["config_id"], config["user_id"],
+            (config["id"], config["user_id"],
              json.dumps(config["assigned_to_user_ids"]), config["label"],
              config["event_type"], config["field"], config["comparator"],
              json.dumps(config["value"]), config.get("value_mode", "absolute"),
@@ -140,7 +140,7 @@ def save_config(config: dict) -> None:
 
 def delete_config(config_id: str) -> None:
     with _db() as con:
-        con.execute("DELETE FROM notification_configs WHERE config_id = ?", (config_id,))
+        con.execute("DELETE FROM notification_configs WHERE id = ?", (config_id,))
 
 
 # ── Active notifications ────────────────────────────────────────────────────────
@@ -160,7 +160,7 @@ def add_notification(notif: dict) -> None:
     with _db() as con:
         con.execute(
             "INSERT OR REPLACE INTO notifications VALUES (?,?,?,?,?,?,?,?,?,?)",
-            (notif["notification_id"], notif["user_id"], notif["config_id"],
+            (notif["id"], notif["user_id"], notif["config_id"],
              notif["config_label"], notif["triggered_by_event_id"],
              notif["triggered_at"], notif["last_seen_at"], notif["message"],
              int(notif.get("read", False)), int(notif.get("is_shared", False))),
@@ -170,7 +170,7 @@ def add_notification(notif: dict) -> None:
 def update_notification_last_seen(notif_id: str, last_seen_at: str) -> None:
     with _db() as con:
         con.execute(
-            "UPDATE notifications SET last_seen_at = ? WHERE notification_id = ?",
+            "UPDATE notifications SET last_seen_at = ? WHERE id = ?",
             (last_seen_at, notif_id),
         )
 
@@ -178,12 +178,11 @@ def update_notification_last_seen(notif_id: str, last_seen_at: str) -> None:
 def mark_notification_read(notif_id: str, user_id: str) -> Optional[dict]:
     with _db() as con:
         con.execute(
-            "UPDATE notifications SET read = 1 "
-            "WHERE notification_id = ? AND user_id = ?",
+            "UPDATE notifications SET read = 1 WHERE id = ? AND user_id = ?",
             (notif_id, user_id),
         )
         row = con.execute(
-            "SELECT * FROM notifications WHERE notification_id = ?", (notif_id,)
+            "SELECT * FROM notifications WHERE id = ?", (notif_id,)
         ).fetchone()
         return _load(row) if row else None
 
@@ -191,13 +190,10 @@ def mark_notification_read(notif_id: str, user_id: str) -> Optional[dict]:
 def resolve_notification(notif: dict) -> None:
     """Move a notification from the active inbox to history."""
     with _db() as con:
-        con.execute(
-            "DELETE FROM notifications WHERE notification_id = ?",
-            (notif["notification_id"],),
-        )
+        con.execute("DELETE FROM notifications WHERE id = ?", (notif["id"],))
         con.execute(
             "INSERT OR REPLACE INTO notification_history VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-            (notif["notification_id"], notif["user_id"], notif["config_id"],
+            (notif["id"], notif["user_id"], notif["config_id"],
              notif["config_label"], notif["triggered_by_event_id"],
              notif["triggered_at"], notif["last_seen_at"], notif["message"],
              int(notif.get("read", False)), int(notif.get("is_shared", False)),
@@ -209,18 +205,16 @@ def dismiss_notification(notif_id: str, user_id: str) -> Optional[dict]:
     """User-initiated dismiss: move to history."""
     with _db() as con:
         row = con.execute(
-            "SELECT * FROM notifications WHERE notification_id = ? AND user_id = ?",
+            "SELECT * FROM notifications WHERE id = ? AND user_id = ?",
             (notif_id, user_id),
         ).fetchone()
         if not row:
             return None
         notif = _load(row)
-        con.execute(
-            "DELETE FROM notifications WHERE notification_id = ?", (notif_id,)
-        )
+        con.execute("DELETE FROM notifications WHERE id = ?", (notif_id,))
         con.execute(
             "INSERT OR REPLACE INTO notification_history VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-            (notif["notification_id"], notif["user_id"], notif["config_id"],
+            (notif["id"], notif["user_id"], notif["config_id"],
              notif["config_label"], notif["triggered_by_event_id"],
              notif["triggered_at"], notif["last_seen_at"], notif["message"],
              int(notif.get("read", False)), int(notif.get("is_shared", False)),
@@ -257,7 +251,7 @@ def bulk_write_seek(active: List[dict], history: List[dict]) -> None:
         con.execute("DELETE FROM notification_history")
         con.executemany(
             "INSERT INTO notifications VALUES (?,?,?,?,?,?,?,?,?,?)",
-            [(n["notification_id"], n["user_id"], n["config_id"],
+            [(n["id"], n["user_id"], n["config_id"],
               n["config_label"], n["triggered_by_event_id"],
               n["triggered_at"], n["last_seen_at"], n["message"],
               int(n.get("read", False)), int(n.get("is_shared", False)))
@@ -265,7 +259,7 @@ def bulk_write_seek(active: List[dict], history: List[dict]) -> None:
         )
         con.executemany(
             "INSERT INTO notification_history VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-            [(h["notification_id"], h["user_id"], h["config_id"],
+            [(h["id"], h["user_id"], h["config_id"],
               h["config_label"], h["triggered_by_event_id"],
               h["triggered_at"], h["last_seen_at"], h["message"],
               int(h.get("read", False)), int(h.get("is_shared", False)),
