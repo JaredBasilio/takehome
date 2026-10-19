@@ -1,8 +1,7 @@
 export interface User {
-  user_id: string;
+  id: string;
   name: string;
   role: "agent" | "team_lead" | "head_of_support";
-  agent_id: string | null;
   manages_queue_ids: string[] | null;
 }
 
@@ -12,7 +11,7 @@ export interface NotificationScope {
 }
 
 export interface NotificationConfig {
-  config_id: string;
+  id: string;
   user_id: string;
   assigned_to_user_ids: string[];
   label: string;
@@ -27,7 +26,7 @@ export interface NotificationConfig {
 }
 
 export interface Notification {
-  notification_id: string;
+  id: string;
   user_id: string;
   config_id: string;
   config_label: string;
@@ -40,7 +39,7 @@ export interface Notification {
 }
 
 export interface NotificationHistoryItem {
-  notification_id: string;
+  id: string;
   user_id: string;
   config_id: string;
   config_label: string;

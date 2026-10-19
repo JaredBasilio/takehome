@@ -80,17 +80,17 @@ export function ConfigEditor({ user }: Props) {
   const [form, setForm] = useState<FormState>(DEFAULT_FORM);
 
   const fetchConfigs = async () => {
-    const data = await api.configs.list(user.user_id);
+    const data = await api.configs.list(user.id);
     setConfigs(data);
   };
 
   useEffect(() => {
     fetchConfigs();
-  }, [user.user_id]);
+  }, [user.id]);
 
-  const ownedConfigs = configs.filter((c) => c.user_id === user.user_id);
+  const ownedConfigs = configs.filter((c) => c.user_id === user.id);
   const sharedToMe = configs.filter(
-    (c) => c.user_id !== user.user_id && c.assigned_to_user_ids.includes(user.user_id)
+    (c) => c.user_id !== user.id && c.assigned_to_user_ids.includes(user.id)
   );
 
   const openCreate = () => {
@@ -101,13 +101,13 @@ export function ConfigEditor({ user }: Props) {
       ...DEFAULT_FORM,
       event_type: defaultType,
       field: defaultField,
-      scope_agent_ids: user.agent_id ?? "",
+      scope_agent_ids: user.role === "agent" ? user.id : "",
     });
     setModalOpen(true);
   };
 
   const openEdit = (config: NotificationConfig) => {
-    setEditing(config.config_id);
+    setEditing(config.id);
     setForm({
       label: config.label,
       event_type: config.event_type,
@@ -147,9 +147,9 @@ export function ConfigEditor({ user }: Props) {
     const payload = buildPayload();
     try {
       if (editing) {
-        await api.configs.update(user.user_id, editing, payload);
+        await api.configs.update(user.id, editing, payload);
       } else {
-        await api.configs.create(user.user_id, payload);
+        await api.configs.create(user.id, payload);
       }
       setModalOpen(false);
       fetchConfigs();
@@ -160,12 +160,12 @@ export function ConfigEditor({ user }: Props) {
 
   const handleDelete = async (configId: string) => {
     if (!confirm("Delete this rule?")) return;
-    await api.configs.delete(user.user_id, configId);
+    await api.configs.delete(user.id, configId);
     fetchConfigs();
   };
 
   const handlePush = async (configId: string) => {
-    await api.configs.push(user.user_id, configId);
+    await api.configs.push(user.id, configId);
     fetchConfigs();
   };
 
@@ -201,18 +201,18 @@ export function ConfigEditor({ user }: Props) {
           <Table.Tbody>
             {ownedConfigs.map((config) => (
               <ConfigRow
-                key={config.config_id}
+                key={config.id}
                 config={config}
                 isOwner
                 canPush={canPush}
                 onEdit={() => openEdit(config)}
-                onDelete={() => handleDelete(config.config_id)}
-                onPush={() => handlePush(config.config_id)}
+                onDelete={() => handleDelete(config.id)}
+                onPush={() => handlePush(config.id)}
               />
             ))}
             {sharedToMe.map((config) => (
               <ConfigRow
-                key={config.config_id}
+                key={config.id}
                 config={config}
                 isOwner={false}
                 canPush={false}
