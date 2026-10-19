@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 
 class Notification(BaseModel):
-    notification_id: str
+    id: str
     user_id: str
     config_id: str
     config_label: str
@@ -15,7 +15,7 @@ class Notification(BaseModel):
 
 
 class NotificationHistoryItem(BaseModel):
-    notification_id: str
+    id: str
     user_id: str
     config_id: str
     config_label: str

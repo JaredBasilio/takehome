@@ -8,7 +8,7 @@ class NotificationScope(BaseModel):
 
 
 class NotificationConfig(BaseModel):
-    config_id: str
+    id: str
     user_id: str
     assigned_to_user_ids: List[str]
     label: str
