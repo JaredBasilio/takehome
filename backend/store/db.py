@@ -51,7 +51,7 @@ def init_db() -> None:
             );
             CREATE TABLE IF NOT EXISTS notification_configs (
                 id TEXT PRIMARY KEY,
-                user_id TEXT NOT NULL,
+                owner_id TEXT NOT NULL,
                 label TEXT NOT NULL,
                 event_type TEXT NOT NULL,
                 field TEXT NOT NULL,
@@ -109,7 +109,7 @@ def init_db() -> None:
             configs = json.loads((_DATA / "notification_configs.json").read_text())
             con.executemany(
                 "INSERT INTO notification_configs VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-                [(c["config_id"], c["user_id"], c["label"],
+                [(c["config_id"], c["owner_id"], c["label"],
                   c["event_type"], c["field"], c["comparator"],
                   json.dumps(c["value"]), c.get("value_mode", "absolute"),
                   json.dumps(c.get("scope")), json.dumps(c.get("filter")),

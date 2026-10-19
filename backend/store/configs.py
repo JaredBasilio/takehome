@@ -19,7 +19,7 @@ def save_config(config: dict) -> None:
     with _db() as con:
         con.execute(
             "INSERT OR REPLACE INTO notification_configs VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-            (config["id"], config["user_id"], config["label"],
+            (config["id"], config["owner_id"], config["label"],
              config["event_type"], config["field"], config["comparator"],
              json.dumps(config["value"]), config.get("value_mode", "absolute"),
              json.dumps(config.get("scope")), json.dumps(config.get("filter")),
