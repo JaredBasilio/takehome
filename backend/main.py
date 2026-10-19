@@ -231,6 +231,6 @@ def _validate_scope(user: dict, scope: Optional[NotificationScope]) -> None:
         if scope.agent_ids and scope.agent_ids != [user["id"]]:
             raise HTTPException(403, "Agents can only create rules scoped to themselves")
     elif role == "team_lead":
-        managed = set(user.get("manages_queue_ids") or [])
+        managed = {m["queue_id"] for m in user.get("queue_memberships", [])}
         if scope.queue_ids and not set(scope.queue_ids).issubset(managed):
             raise HTTPException(403, "Scope exceeds managed queues")
