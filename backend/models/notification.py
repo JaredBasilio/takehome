@@ -6,16 +6,20 @@ class Notification(BaseModel):
     """
     A notification produced when a monitored condition is detected.
 
-    The system evaluates rules (referenced by config_id) against an event stream.
-    When a rule matches, one Notification is created per recipient (recipient_id).
-    While the condition persists, last_seen_at is updated but no new notification
-    is fired. When the condition clears, the notification is resolved (status →
-    'resolved') and moved to history. Manual dismissals set resolved_by_event_id
-    to 'user_dismissed'.
+    Stored across two tables: notifications (the shared body — message, config,
+    timestamps) and notification_recipients (per-recipient state — read, status,
+    resolved_at). This model is a flattened JOIN result for one specific recipient,
+    so the API can return a simple list without clients doing any joining.
+
+    Lifecycle: the rule engine fires when a condition is first detected (status →
+    'active'). last_seen_at is updated on each subsequent matching event without
+    re-firing. When the condition clears, resolve_notification() resolves all
+    still-active recipient rows at once. A recipient can also dismiss manually
+    (status → 'resolved', resolved_by_event_id = 'user_dismissed'), which only
+    affects their own row — other recipients continue to see the notification.
 
     This model is rule-engine-agnostic: the event stream, rule format, and
-    delivery mechanism are all pluggable. Only the lifecycle (active → resolved)
-    is enforced here.
+    delivery mechanism are all pluggable.
     """
     id: str
     recipient_id: str                      # who receives this notification (user, team, monitor, etc.)
