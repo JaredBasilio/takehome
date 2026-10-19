@@ -4,7 +4,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import List, Optional
 
-_DB = Path(__file__).parent / "data" / "notifications.db"
+_DB = Path(__file__).parent / "data" / "app.db"
 _DATA = Path(__file__).parent / "data"
 
 
