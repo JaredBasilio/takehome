@@ -10,10 +10,17 @@ export interface NotificationScope {
   queue_ids?: string[] | null;
 }
 
+export interface ConfigAssignment {
+  recipient_id: string;
+  // Future: is_enabled?: boolean;
+  // Future: interfaces?: string[];  // delivery channels: "in_app" | "slack" | "email"
+  // Future: priority?: string;
+}
+
 export interface NotificationConfig {
   id: string;
   owner_id: string;
-  assigned_to_recipient_ids: string[];
+  assignments: ConfigAssignment[];
   label: string;
   event_type: string;
   field: string;
