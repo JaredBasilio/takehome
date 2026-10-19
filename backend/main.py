@@ -66,7 +66,7 @@ def dismiss_notification(user_id: str, notif_id: str):
 def get_configs(user_id: str):
     return [
         c for c in store.get_configs()
-        if c["user_id"] == user_id or user_id in c.get("assigned_to_user_ids", [])
+        if c["user_id"] == user_id or user_id in c.get("assigned_to_recipient_ids", [])
     ]
 
 
@@ -81,7 +81,7 @@ def create_config(user_id: str, req: CreateConfigRequest):
     config = {
         "id": f"cfg_{uuid.uuid4().hex[:6]}",
         "user_id": user_id,
-        "assigned_to_user_ids": [user_id],
+        "assigned_to_recipient_ids": [user_id],
         "label": req.label,
         "event_type": req.event_type,
         "field": req.field,
@@ -148,8 +148,8 @@ def push_config_to_agents(user_id: str, config_id: str):
         raise HTTPException(404, "Config not found")
 
     agent_ids = [u["id"] for u in users if u["role"] == "agent"]
-    target["assigned_to_user_ids"] = list(
-        set(target["assigned_to_user_ids"]) | set(agent_ids)
+    target["assigned_to_recipient_ids"] = list(
+        set(target["assigned_to_recipient_ids"]) | set(agent_ids)
     )
     target["is_shared"] = True
     store.save_config(target)
