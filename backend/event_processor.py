@@ -80,26 +80,12 @@ class ReplayState:
 
                 new_notifs, updated_notifs, resolved = self._engine.process_event(event, configs)
 
-                # Apply changes to the store atomically
-                active = store.get_notifications()
-                active_map = {n["notification_id"]: n for n in active}
-
                 for n in new_notifs:
-                    active_map[n["notification_id"]] = n
-
+                    store.add_notification(n)
                 for n in updated_notifs:
-                    nid = n["notification_id"]
-                    if nid in active_map:
-                        active_map[nid]["last_seen_at"] = n["last_seen_at"]
-
-                resolved_ids = {r["notification_id"] for r in resolved}
-                remaining = [n for nid, n in active_map.items() if nid not in resolved_ids]
-                store.save_notifications(remaining)
-
-                if resolved:
-                    history = store.get_history()
-                    history.extend(resolved)
-                    store.save_history(history)
+                    store.update_notification_last_seen(n["notification_id"], n["last_seen_at"])
+                for r in resolved:
+                    store.resolve_notification(r)
 
                 if delay > 0:
                     await asyncio.sleep(delay)
