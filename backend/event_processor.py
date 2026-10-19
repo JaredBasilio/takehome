@@ -83,7 +83,7 @@ class ReplayState:
                 for n in new_notifs:
                     store.add_notification(n)
                 for n in updated_notifs:
-                    store.update_notification_last_seen(n["notification_id"], n["last_seen_at"])
+                    store.update_notification_last_seen(n["id"], n["last_seen_at"])
                 for r in resolved:
                     store.resolve_notification(r)
 

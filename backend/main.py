@@ -73,7 +73,7 @@ def get_configs(user_id: str):
 @app.post("/api/users/{user_id}/configs", status_code=201)
 def create_config(user_id: str, req: CreateConfigRequest):
     users = store.get_users()
-    user = next((u for u in users if u["user_id"] == user_id), None)
+    user = next((u for u in users if u["id"] == user_id), None)
     if not user:
         raise HTTPException(404, "User not found")
     _validate_scope(user, req.scope)
@@ -107,7 +107,7 @@ def update_config(user_id: str, config_id: str, req: CreateConfigRequest):
         raise HTTPException(404, "Config not found")
 
     users = store.get_users()
-    user = next((u for u in users if u["user_id"] == user_id), None)
+    user = next((u for u in users if u["id"] == user_id), None)
     _validate_scope(user, req.scope)
 
     target.update({
@@ -135,7 +135,7 @@ def delete_config(user_id: str, config_id: str):
 @app.post("/api/users/{user_id}/configs/{config_id}/push")
 def push_config_to_agents(user_id: str, config_id: str):
     users = store.get_users()
-    owner = next((u for u in users if u["user_id"] == user_id), None)
+    owner = next((u for u in users if u["id"] == user_id), None)
     if not owner or owner["role"] not in ("team_lead", "head_of_support"):
         raise HTTPException(403, "Only team leads and heads of support can push configs")
 
@@ -147,7 +147,7 @@ def push_config_to_agents(user_id: str, config_id: str):
     if not target:
         raise HTTPException(404, "Config not found")
 
-    agent_ids = [u["user_id"] for u in users if u["role"] == "agent"]
+    agent_ids = [u["id"] for u in users if u["role"] == "agent"]
     target["assigned_to_user_ids"] = list(
         set(target["assigned_to_user_ids"]) | set(agent_ids)
     )
@@ -225,7 +225,7 @@ def _validate_scope(user: dict, scope: Optional[NotificationScope]) -> None:
     if role == "agent":
         if scope.queue_ids:
             raise HTTPException(403, "Agents cannot create queue-scoped rules")
-        if scope.agent_ids and scope.agent_ids != [user["user_id"]]:
+        if scope.agent_ids and scope.agent_ids != [user["id"]]:
             raise HTTPException(403, "Agents can only create rules scoped to themselves")
     elif role == "team_lead":
         managed = set(user.get("manages_queue_ids") or [])
