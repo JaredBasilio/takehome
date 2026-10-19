@@ -1,3 +1,4 @@
+import json
 from typing import List, Optional
 
 from .db import _db, _load
@@ -7,7 +8,7 @@ def get_notifications(user_id: Optional[str] = None) -> List[dict]:
     with _db() as con:
         if user_id:
             rows = con.execute(
-                "SELECT * FROM notifications WHERE user_id = ? AND status = 'active'",
+                "SELECT * FROM notifications WHERE recipient_id = ? AND status = 'active'",
                 (user_id,),
             )
         else:
@@ -19,8 +20,8 @@ def add_notification(notif: dict) -> None:
     with _db() as con:
         con.execute(
             "INSERT OR REPLACE INTO notifications VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            (notif["id"], notif["user_id"], notif["config_id"],
-             notif["config_label"], notif["triggered_by_event_id"],
+            (notif["id"], notif["recipient_id"], notif["config_id"],
+             notif["config_label"], json.dumps(notif["triggering_event_ids"]),
              notif["triggered_at"], notif["last_seen_at"], notif["message"],
              int(notif.get("read", False)), int(notif.get("is_shared", False)),
              "active", None, None),
@@ -38,7 +39,7 @@ def update_notification_last_seen(notif_id: str, last_seen_at: str) -> None:
 def mark_notification_read(notif_id: str, user_id: str) -> Optional[dict]:
     with _db() as con:
         con.execute(
-            "UPDATE notifications SET read = 1 WHERE id = ? AND user_id = ?",
+            "UPDATE notifications SET read = 1 WHERE id = ? AND recipient_id = ?",
             (notif_id, user_id),
         )
         row = con.execute(
@@ -58,7 +59,7 @@ def resolve_notification(notif: dict) -> None:
 def dismiss_notification(notif_id: str, user_id: str) -> Optional[dict]:
     with _db() as con:
         row = con.execute(
-            "SELECT * FROM notifications WHERE id = ? AND user_id = ? AND status = 'active'",
+            "SELECT * FROM notifications WHERE id = ? AND recipient_id = ? AND status = 'active'",
             (notif_id, user_id),
         ).fetchone()
         if not row:
@@ -75,7 +76,7 @@ def get_history(user_id: Optional[str] = None) -> List[dict]:
     with _db() as con:
         if user_id:
             rows = con.execute(
-                "SELECT * FROM notifications WHERE user_id = ? AND status = 'resolved'",
+                "SELECT * FROM notifications WHERE recipient_id = ? AND status = 'resolved'",
                 (user_id,),
             )
         else:
@@ -93,14 +94,14 @@ def bulk_write_seek(active: List[dict], history: List[dict]) -> None:
         con.execute("DELETE FROM notifications")
         con.executemany(
             "INSERT INTO notifications VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
-            [(n["id"], n["user_id"], n["config_id"],
-              n["config_label"], n["triggered_by_event_id"],
+            [(n["id"], n["recipient_id"], n["config_id"],
+              n["config_label"], json.dumps(n["triggering_event_ids"]),
               n["triggered_at"], n["last_seen_at"], n["message"],
               int(n.get("read", False)), int(n.get("is_shared", False)),
               "active", None, None)
              for n in active] +
-            [(h["id"], h["user_id"], h["config_id"],
-              h["config_label"], h["triggered_by_event_id"],
+            [(h["id"], h["recipient_id"], h["config_id"],
+              h["config_label"], json.dumps(h["triggering_event_ids"]),
               h["triggered_at"], h["last_seen_at"], h["message"],
               int(h.get("read", False)), int(h.get("is_shared", False)),
               "resolved", h.get("resolved_at"), h.get("resolved_by_event_id"))

@@ -24,7 +24,7 @@ def _db():
 
 def _load(row) -> dict:
     d = dict(row)
-    for key in ("value", "scope", "filter"):
+    for key in ("value", "scope", "filter", "triggering_event_ids"):
         if key in d and d[key] is not None:
             try:
                 d[key] = json.loads(d[key])
@@ -69,10 +69,10 @@ def init_db() -> None:
             );
             CREATE TABLE IF NOT EXISTS notifications (
                 id TEXT PRIMARY KEY,
-                user_id TEXT NOT NULL,
+                recipient_id TEXT NOT NULL,
                 config_id TEXT NOT NULL,
                 config_label TEXT NOT NULL,
-                triggered_by_event_id TEXT NOT NULL,
+                triggering_event_ids TEXT NOT NULL,
                 triggered_at TEXT NOT NULL,
                 last_seen_at TEXT NOT NULL,
                 message TEXT NOT NULL,
@@ -82,8 +82,8 @@ def init_db() -> None:
                 resolved_at TEXT,
                 resolved_by_event_id TEXT
             );
-            CREATE INDEX IF NOT EXISTS idx_notif_user ON notifications(user_id);
-            CREATE INDEX IF NOT EXISTS idx_notif_status ON notifications(user_id, status);
+            CREATE INDEX IF NOT EXISTS idx_notif_recipient ON notifications(recipient_id);
+            CREATE INDEX IF NOT EXISTS idx_notif_status ON notifications(recipient_id, status);
         """)
 
         if con.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0:
