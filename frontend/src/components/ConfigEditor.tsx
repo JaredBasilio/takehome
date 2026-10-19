@@ -88,9 +88,9 @@ export function ConfigEditor({ user }: Props) {
     fetchConfigs();
   }, [user.id]);
 
-  const ownedConfigs = configs.filter((c) => c.user_id === user.id);
+  const ownedConfigs = configs.filter((c) => c.owner_id === user.id);
   const sharedToMe = configs.filter(
-    (c) => c.user_id !== user.id && c.assigned_to_recipient_ids.includes(user.id)
+    (c) => c.owner_id !== user.id && c.assigned_to_recipient_ids.includes(user.id)
   );
 
   const openCreate = () => {
