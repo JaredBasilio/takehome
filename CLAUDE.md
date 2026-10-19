@@ -10,7 +10,7 @@ Contact-center notification system: agents, team leads, and a head of support se
 
 ## Decisions
 - Stack: Python backend (FastAPI) and a React + TypeScript + Mantine frontend.
-- Storage: SQLite (WAL mode) at `backend/data/notifications.db`. No Docker. Seed data (`users.json`, `notification_configs.json`) is still JSON and is loaded into the DB on first startup via `store.init_db()`. The DB file is gitignored — it is created fresh on each new checkout. **Concurrent writes limitation**: SQLite WAL allows concurrent reads but only one writer at a time. During fast replay, rapid write requests are serialized; brief lock contention is expected and acceptable for a demo. For production, use Postgres with row-level locking.
+- Storage: SQLite (WAL mode) at `backend/data/app.db` — one DB, four tables: `users`, `notification_configs`, `notifications`, `notification_history`. No Docker. Seed data (`users.json`, `notification_configs.json`) is still JSON and is loaded into the DB on first startup via `store.init_db()`. The DB file is gitignored — it is created fresh on each new checkout. **Concurrent writes limitation**: SQLite WAL allows concurrent reads but only one writer at a time. During fast replay, rapid write requests are serialized; brief lock contention is expected and acceptable for a demo. For production, use Postgres with row-level locking.
 - Out of scope: real delivery (Slack, email, etc.), CI/CD, and auth.
 - Roles are nested: head of support ⊇ team lead ⊇ agent. A rule is `event + comparator + value`.
 - Everyone is a `User` with a role, and the role can change. A `user_notifications` join table links users to configs so configs can be shared later.
@@ -27,7 +27,7 @@ Contact-center notification system: agents, team leads, and a head of support se
 - The UI must let you switch between users to see each user's feed.
 
 ## Layout & running
-- `backend/` (FastAPI, **Python 3.9**, so use `typing.List`/`Optional` and not `list[...]` or `X | None`): `main.py` has the REST endpoints, `rule_engine.py` handles evaluation and the active-condition tracker, `event_processor.py` handles replay, `store.py` handles SQLite I/O, `models.py` holds the Pydantic models. Seed data and `events.jsonl` live in `backend/data/`. The SQLite DB (`notifications.db`) is gitignored and created on startup.
+- `backend/` (FastAPI, **Python 3.9**, so use `typing.List`/`Optional` and not `list[...]` or `X | None`): `main.py` has the REST endpoints, `rule_engine.py` handles evaluation and the active-condition tracker, `event_processor.py` handles replay, `store.py` handles SQLite I/O, `models.py` holds the Pydantic models. Seed data and `events.jsonl` live in `backend/data/`. The SQLite DB (`app.db`) is gitignored and created on startup.
 - `frontend/` (Vite + React 18 + Mantine v7): `src/api.ts` is the API client, and `src/components/` holds UserSwitcher, NotificationInbox, NotificationHistory, ConfigEditor, ReplayControls, and TimelineScrubber (the second header row, which is why the header is 84px). Vite proxies `/api` → `localhost:8000`. The inbox polls every 500ms during replay.
 - Run: `cd backend && .venv/bin/uvicorn main:app --port 8000` and `cd frontend && npm run dev` (port 5173).
 - Venv setup: build it with `/usr/bin/python3 -m venv .venv` (system 3.9.6). The `python3` on PATH fails to build the pinned `pydantic-core` wheel. 3.11–3.13 aren't installed.
