@@ -1,6 +1,6 @@
 import { Avatar, Badge, Box, NavLink, Stack, Text } from "@mantine/core";
 import { useEffect, useState } from "react";
-import { type Notification, type User, api } from "../api";
+import { type NotificationRecipient, type User, api } from "../api";
 
 const ROLE_COLORS: Record<string, string> = {
   agent: "blue",
@@ -30,7 +30,7 @@ export function UserSwitcher({ users, activeUserId, onSelect }: Props) {
       const counts: Record<string, number> = {};
       await Promise.all(
         users.map(async (u) => {
-          const notifs: Notification[] = await api.notifications.list(u.id);
+          const notifs: NotificationRecipient[] = await api.notifications.list(u.id);
           counts[u.id] = notifs.filter((n) => !n.read).length;
         })
       );

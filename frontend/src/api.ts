@@ -27,18 +27,23 @@ export interface NotificationConfig {
 
 export interface Notification {
   id: string;
-  recipient_id: string;
   config_id: string;
   config_label: string;
   triggering_event_ids: string[];
   triggered_at: string;
   last_seen_at: string;
   message: string;
-  read: boolean;
+}
+
+export interface NotificationRecipient {
+  notification_id: string;
+  recipient_id: string;
   is_shared: boolean;
+  read: boolean;
   status: "active" | "resolved";
   resolved_at: string | null;
   resolved_by_event_id: string | null;
+  notification: Notification;
 }
 
 export interface ReplayStatus {
@@ -110,10 +115,10 @@ export const api = {
     list: () => get<User[]>("/users"),
   },
   notifications: {
-    list: (userId: string) => get<Notification[]>(`/users/${userId}/notifications`),
-    history: (userId: string) => get<Notification[]>(`/users/${userId}/notifications/history`),
+    list: (userId: string) => get<NotificationRecipient[]>(`/users/${userId}/notifications`),
+    history: (userId: string) => get<NotificationRecipient[]>(`/users/${userId}/notifications/history`),
     markRead: (userId: string, notifId: string) =>
-      patch<Notification>(`/users/${userId}/notifications/${notifId}/read`),
+      patch<NotificationRecipient>(`/users/${userId}/notifications/${notifId}/read`),
     dismiss: (userId: string, notifId: string) =>
       del<{ status: string }>(`/users/${userId}/notifications/${notifId}`),
   },
