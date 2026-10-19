@@ -1,7 +1,7 @@
 [
   {
     "config_id": "cfg_1",
-    "user_id": "a_19",
+    "owner_id": "a_19",
     "assigned_to_recipient_ids": ["a_19"],
     "label": "I drift out of adherence",
     "event_type": "adherence_check",
@@ -15,7 +15,7 @@
   },
   {
     "config_id": "cfg_2",
-    "user_id": "a_07",
+    "owner_id": "a_07",
     "assigned_to_recipient_ids": ["a_07"],
     "label": "I finish a long call (>12 min)",
     "event_type": "agent_state_change",
@@ -29,7 +29,7 @@
   },
   {
     "config_id": "cfg_3",
-    "user_id": "u_3",
+    "owner_id": "u_3",
     "assigned_to_recipient_ids": ["u_3"],
     "label": "Billing queue > 15 tickets waiting",
     "event_type": "queue_snapshot",
@@ -43,7 +43,7 @@
   },
   {
     "config_id": "cfg_4",
-    "user_id": "u_3",
+    "owner_id": "u_3",
     "assigned_to_recipient_ids": ["u_3"],
     "label": "Agent adherence violation in my queues",
     "event_type": "adherence_check",
@@ -57,7 +57,7 @@
   },
   {
     "config_id": "cfg_5",
-    "user_id": "u_3",
+    "owner_id": "u_3",
     "assigned_to_recipient_ids": ["a_19", "a_07"],
     "label": "Billing queue critically overloaded (>20 tickets)",
     "event_type": "queue_snapshot",
@@ -71,7 +71,7 @@
   },
   {
     "config_id": "cfg_6",
-    "user_id": "u_4",
+    "owner_id": "u_4",
     "assigned_to_recipient_ids": ["u_4"],
     "label": "Any queue SLA at risk (>70% of target)",
     "event_type": "queue_snapshot",
@@ -85,7 +85,7 @@
   },
   {
     "config_id": "cfg_7",
-    "user_id": "u_4",
+    "owner_id": "u_4",
     "assigned_to_recipient_ids": ["u_4"],
     "label": "Any queue SLA breached (>100% of target)",
     "event_type": "queue_snapshot",
