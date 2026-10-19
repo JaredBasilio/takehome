@@ -210,9 +210,9 @@ class RuleEngine:
 
     def _make_notification(self, event: dict, config: dict, user_id: str) -> dict:
         return {
-            "notification_id": f"notif_{uuid.uuid4().hex[:8]}",
+            "id": f"notif_{uuid.uuid4().hex[:8]}",
             "user_id": user_id,
-            "config_id": config["config_id"],
+            "config_id": config["id"],
             "config_label": config["label"],
             "triggered_by_event_id": event["event_id"],
             "triggered_at": event["ts"],
