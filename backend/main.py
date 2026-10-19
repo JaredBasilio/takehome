@@ -234,3 +234,12 @@ def _validate_scope(user: dict, scope: Optional[NotificationScope]) -> None:
         managed = {m["queue_id"] for m in user.get("queue_memberships", [])}
         if scope.queue_ids and not set(scope.queue_ids).issubset(managed):
             raise HTTPException(403, "Scope exceeds managed queues")
+        if scope.agent_ids:
+            # Each scoped agent must belong to at least one of the lead's queues
+            all_users = store.get_users()
+            users_by_id = {u["id"]: u for u in all_users}
+            for agent_id in scope.agent_ids:
+                agent = users_by_id.get(agent_id)
+                agent_queues = {m["queue_id"] for m in (agent or {}).get("queue_memberships", [])}
+                if not agent or not agent_queues.intersection(managed):
+                    raise HTTPException(403, f"Agent {agent_id} is not in any of your managed queues")
