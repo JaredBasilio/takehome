@@ -223,10 +223,9 @@ def _validate_scope(user: dict, scope: Optional[NotificationScope]) -> None:
         return
     role = user.get("role")
     if role == "agent":
-        agent_id = user.get("agent_id")
         if scope.queue_ids:
             raise HTTPException(403, "Agents cannot create queue-scoped rules")
-        if scope.agent_ids and scope.agent_ids != [agent_id]:
+        if scope.agent_ids and scope.agent_ids != [user["user_id"]]:
             raise HTTPException(403, "Agents can only create rules scoped to themselves")
     elif role == "team_lead":
         managed = set(user.get("manages_queue_ids") or [])
