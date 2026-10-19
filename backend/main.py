@@ -66,7 +66,7 @@ def dismiss_notification(user_id: str, notif_id: str):
 def get_configs(user_id: str):
     return [
         c for c in store.get_configs()
-        if c["user_id"] == user_id or user_id in c.get("assigned_to_recipient_ids", [])
+        if c["owner_id"] == user_id or user_id in c.get("assigned_to_recipient_ids", [])
     ]
 
 
@@ -80,7 +80,7 @@ def create_config(user_id: str, req: CreateConfigRequest):
 
     config = {
         "id": f"cfg_{uuid.uuid4().hex[:6]}",
-        "user_id": user_id,
+        "owner_id": user_id,
         "assigned_to_recipient_ids": [user_id],
         "label": req.label,
         "event_type": req.event_type,
@@ -100,7 +100,7 @@ def create_config(user_id: str, req: CreateConfigRequest):
 def update_config(user_id: str, config_id: str, req: CreateConfigRequest):
     configs = store.get_configs()
     target = next(
-        (c for c in configs if c["id"] == config_id and c["user_id"] == user_id),
+        (c for c in configs if c["id"] == config_id and c["owner_id"] == user_id),
         None,
     )
     if not target:
@@ -127,7 +127,7 @@ def update_config(user_id: str, config_id: str, req: CreateConfigRequest):
 @app.delete("/api/users/{user_id}/configs/{config_id}", status_code=204)
 def delete_config(user_id: str, config_id: str):
     configs = store.get_configs()
-    if not any(c["id"] == config_id and c["user_id"] == user_id for c in configs):
+    if not any(c["id"] == config_id and c["owner_id"] == user_id for c in configs):
         raise HTTPException(404, "Config not found")
     store.delete_config(config_id)
 
@@ -141,7 +141,7 @@ def push_config_to_agents(user_id: str, config_id: str):
 
     configs = store.get_configs()
     target = next(
-        (c for c in configs if c["id"] == config_id and c["user_id"] == user_id),
+        (c for c in configs if c["id"] == config_id and c["owner_id"] == user_id),
         None,
     )
     if not target:
