@@ -134,7 +134,7 @@ def _generate_message(event: dict, config: dict) -> str:
 
 class RuleEngine:
     def __init__(self):
-        # Maps (config_id, entity_key, user_id) -> active notification dict
+        # Maps (config_id, entity_key, recipient_id) -> active notification dict
         # Only used for STATEFUL_EVENT_TYPES
         self._active: Dict[Tuple[str, str, str], dict] = {}
 
@@ -181,7 +181,7 @@ class RuleEngine:
                 condition_met = filter_passes and _evaluate_condition(event, config)
 
             for user_id in config["assigned_to_user_ids"]:
-                active_key = (config["config_id"], entity_key, user_id)
+                active_key = (config["id"], entity_key, user_id)
 
                 if is_stateful:
                     if condition_met:
@@ -211,10 +211,10 @@ class RuleEngine:
     def _make_notification(self, event: dict, config: dict, user_id: str) -> dict:
         return {
             "id": f"notif_{uuid.uuid4().hex[:8]}",
-            "user_id": user_id,
+            "recipient_id": user_id,
             "config_id": config["id"],
             "config_label": config["label"],
-            "triggered_by_event_id": event["event_id"],
+            "triggering_event_ids": [event["event_id"]],
             "triggered_at": event["ts"],
             "last_seen_at": event["ts"],
             "message": _generate_message(event, config),
