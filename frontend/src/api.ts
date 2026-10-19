@@ -27,10 +27,10 @@ export interface NotificationConfig {
 
 export interface Notification {
   id: string;
-  user_id: string;
+  recipient_id: string;
   config_id: string;
   config_label: string;
-  triggered_by_event_id: string;
+  triggering_event_ids: string[];
   triggered_at: string;
   last_seen_at: string;
   message: string;
