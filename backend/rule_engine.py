@@ -134,9 +134,9 @@ def _generate_message(event: dict, config: dict) -> str:
 
 class RuleEngine:
     def __init__(self):
-        # Maps (config_id, entity_key, recipient_id) -> active notification dict
+        # Maps (config_id, entity_key) -> active notification dict (shared across all recipients)
         # Only used for STATEFUL_EVENT_TYPES
-        self._active: Dict[Tuple[str, str, str], dict] = {}
+        self._active: Dict[Tuple[str, str], dict] = {}
 
     def reset(self) -> None:
         self._active = {}
@@ -180,44 +180,42 @@ class RuleEngine:
                 # For discrete events (agent_state_change), filter failure = not met
                 condition_met = filter_passes and _evaluate_condition(event, config)
 
-            for user_id in config["assigned_to_user_ids"]:
-                active_key = (config["id"], entity_key, user_id)
+            active_key = (config["id"], entity_key)
 
-                if is_stateful:
-                    if condition_met:
-                        if active_key not in self._active:
-                            notif = self._make_notification(event, config, user_id)
-                            self._active[active_key] = notif
-                            new_notifs.append(notif)
-                        else:
-                            self._active[active_key]["last_seen_at"] = event["ts"]
-                            updated_notifs.append(self._active[active_key])
-                    else:
-                        if active_key in self._active:
-                            notif = self._active.pop(active_key)
-                            resolved.append({
-                                **notif,
-                                "resolved_at": event["ts"],
-                                "resolved_by_event_id": event["event_id"],
-                            })
-                else:
-                    # Discrete event: each match is a fresh notification
-                    if condition_met:
-                        notif = self._make_notification(event, config, user_id)
+            if is_stateful:
+                if condition_met:
+                    if active_key not in self._active:
+                        notif = self._make_notification(event, config)
+                        self._active[active_key] = notif
                         new_notifs.append(notif)
+                    else:
+                        self._active[active_key]["last_seen_at"] = event["ts"]
+                        updated_notifs.append(self._active[active_key])
+                else:
+                    if active_key in self._active:
+                        notif = self._active.pop(active_key)
+                        resolved.append({
+                            **notif,
+                            "resolved_at": event["ts"],
+                            "resolved_by_event_id": event["event_id"],
+                        })
+            else:
+                # Discrete event: each match is a fresh notification
+                if condition_met:
+                    notif = self._make_notification(event, config)
+                    new_notifs.append(notif)
 
         return new_notifs, updated_notifs, resolved
 
-    def _make_notification(self, event: dict, config: dict, user_id: str) -> dict:
+    def _make_notification(self, event: dict, config: dict) -> dict:
         return {
             "id": f"notif_{uuid.uuid4().hex[:8]}",
-            "recipient_id": user_id,
             "config_id": config["id"],
             "config_label": config["label"],
             "triggering_event_ids": [event["event_id"]],
             "triggered_at": event["ts"],
             "last_seen_at": event["ts"],
             "message": _generate_message(event, config),
-            "read": False,
             "is_shared": config.get("is_shared", False),
+            "recipient_ids": list(config["assigned_to_user_ids"]),
         }
