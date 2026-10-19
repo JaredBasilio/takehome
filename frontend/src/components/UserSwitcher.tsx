@@ -30,8 +30,8 @@ export function UserSwitcher({ users, activeUserId, onSelect }: Props) {
       const counts: Record<string, number> = {};
       await Promise.all(
         users.map(async (u) => {
-          const notifs: Notification[] = await api.notifications.list(u.user_id);
-          counts[u.user_id] = notifs.filter((n) => !n.read).length;
+          const notifs: Notification[] = await api.notifications.list(u.id);
+          counts[u.id] = notifs.filter((n) => !n.read).length;
         })
       );
       setUnreadCounts(counts);
@@ -48,7 +48,7 @@ export function UserSwitcher({ users, activeUserId, onSelect }: Props) {
         Team Members
       </Text>
       {users.map((user) => {
-        const unread = unreadCounts[user.user_id] ?? 0;
+        const unread = unreadCounts[user.id] ?? 0;
         const initials = user.name
           .split(" ")
           .map((n) => n[0])
@@ -57,9 +57,9 @@ export function UserSwitcher({ users, activeUserId, onSelect }: Props) {
 
         return (
           <NavLink
-            key={user.user_id}
-            active={user.user_id === activeUserId}
-            onClick={() => onSelect(user.user_id)}
+            key={user.id}
+            active={user.id === activeUserId}
+            onClick={() => onSelect(user.id)}
             label={
               <Box>
                 <Text size="sm" fw={500} lh={1.3}>

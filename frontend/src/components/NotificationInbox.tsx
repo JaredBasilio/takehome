@@ -45,13 +45,13 @@ export function NotificationInbox({ userId, replayStatus }: Props) {
   const handleMarkRead = async (notifId: string) => {
     await api.notifications.markRead(userId, notifId);
     setNotifications((prev) =>
-      prev.map((n) => (n.notification_id === notifId ? { ...n, read: true } : n))
+      prev.map((n) => (n.id === notifId ? { ...n, read: true } : n))
     );
   };
 
   const handleDismiss = async (notifId: string) => {
     await api.notifications.dismiss(userId, notifId);
-    setNotifications((prev) => prev.filter((n) => n.notification_id !== notifId));
+    setNotifications((prev) => prev.filter((n) => n.id !== notifId));
   };
 
   const unread = notifications.filter((n) => !n.read).length;
@@ -86,7 +86,7 @@ export function NotificationInbox({ userId, replayStatus }: Props) {
 
           return (
             <Card
-              key={n.notification_id}
+              key={n.id}
               withBorder
               p="sm"
               radius="md"
@@ -135,7 +135,7 @@ export function NotificationInbox({ userId, replayStatus }: Props) {
                         size="sm"
                         variant="subtle"
                         color="green"
-                        onClick={() => handleMarkRead(n.notification_id)}
+                        onClick={() => handleMarkRead(n.id)}
                       >
                         <IconCheck size={14} />
                       </ActionIcon>
@@ -146,7 +146,7 @@ export function NotificationInbox({ userId, replayStatus }: Props) {
                       size="sm"
                       variant="subtle"
                       color="gray"
-                      onClick={() => handleDismiss(n.notification_id)}
+                      onClick={() => handleDismiss(n.id)}
                     >
                       <IconX size={14} />
                     </ActionIcon>

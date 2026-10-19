@@ -70,7 +70,7 @@ export function NotificationHistory({ userId, replayStatus }: Props) {
           </Table.Thead>
           <Table.Tbody>
             {[...history].reverse().map((item) => (
-              <Table.Tr key={item.notification_id}>
+              <Table.Tr key={item.id}>
                 <Table.Td>
                   <Text size="xs" fw={500}>
                     {item.config_label}

@@ -23,7 +23,7 @@ export default function App() {
   useEffect(() => {
     api.users.list().then((u) => {
       setUsers(u);
-      if (u.length > 0) setActiveUserId(u[0].user_id);
+      if (u.length > 0) setActiveUserId(u[0].id);
     });
   }, []);
 
@@ -36,7 +36,7 @@ export default function App() {
     return () => clearInterval(interval);
   }, []);
 
-  const activeUser = users.find((u) => u.user_id === activeUserId);
+  const activeUser = users.find((u) => u.id === activeUserId);
 
   return (
     <AppShell
@@ -72,7 +72,6 @@ export default function App() {
               </Title>
               <Text size="sm" c="dimmed" tt="capitalize">
                 {activeUser.role.replace(/_/g, " ")}
-                {activeUser.agent_id ? ` · ${activeUser.agent_id}` : ""}
                 {activeUser.manages_queue_ids
                   ? ` · queues: ${activeUser.manages_queue_ids.join(", ")}`
                   : ""}
