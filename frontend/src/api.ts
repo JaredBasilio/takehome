@@ -36,18 +36,9 @@ export interface Notification {
   message: string;
   read: boolean;
   is_shared: boolean;
-}
-
-export interface NotificationHistoryItem {
-  id: string;
-  user_id: string;
-  config_id: string;
-  config_label: string;
-  triggered_at: string;
-  resolved_at: string;
-  resolved_by_event_id: string;
-  message: string;
-  is_shared: boolean;
+  status: "active" | "resolved";
+  resolved_at: string | null;
+  resolved_by_event_id: string | null;
 }
 
 export interface ReplayStatus {
@@ -120,7 +111,7 @@ export const api = {
   },
   notifications: {
     list: (userId: string) => get<Notification[]>(`/users/${userId}/notifications`),
-    history: (userId: string) => get<NotificationHistoryItem[]>(`/users/${userId}/notifications/history`),
+    history: (userId: string) => get<Notification[]>(`/users/${userId}/notifications/history`),
     markRead: (userId: string, notifId: string) =>
       patch<Notification>(`/users/${userId}/notifications/${notifId}/read`),
     dismiss: (userId: string, notifId: string) =>
