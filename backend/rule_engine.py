@@ -217,5 +217,5 @@ class RuleEngine:
             "last_seen_at": event["ts"],
             "message": _generate_message(event, config),
             "is_shared": config.get("is_shared", False),
-            "recipient_ids": list(config["assigned_to_user_ids"]),
+            "recipient_ids": list(config["assigned_to_recipient_ids"]),
         }
