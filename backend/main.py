@@ -79,7 +79,7 @@ def create_config(user_id: str, req: CreateConfigRequest):
     _validate_scope(user, req.scope)
 
     config = {
-        "config_id": f"cfg_{uuid.uuid4().hex[:6]}",
+        "id": f"cfg_{uuid.uuid4().hex[:6]}",
         "user_id": user_id,
         "assigned_to_user_ids": [user_id],
         "label": req.label,
@@ -100,7 +100,7 @@ def create_config(user_id: str, req: CreateConfigRequest):
 def update_config(user_id: str, config_id: str, req: CreateConfigRequest):
     configs = store.get_configs()
     target = next(
-        (c for c in configs if c["config_id"] == config_id and c["user_id"] == user_id),
+        (c for c in configs if c["id"] == config_id and c["user_id"] == user_id),
         None,
     )
     if not target:
@@ -127,7 +127,7 @@ def update_config(user_id: str, config_id: str, req: CreateConfigRequest):
 @app.delete("/api/users/{user_id}/configs/{config_id}", status_code=204)
 def delete_config(user_id: str, config_id: str):
     configs = store.get_configs()
-    if not any(c["config_id"] == config_id and c["user_id"] == user_id for c in configs):
+    if not any(c["id"] == config_id and c["user_id"] == user_id for c in configs):
         raise HTTPException(404, "Config not found")
     store.delete_config(config_id)
 
@@ -141,7 +141,7 @@ def push_config_to_agents(user_id: str, config_id: str):
 
     configs = store.get_configs()
     target = next(
-        (c for c in configs if c["config_id"] == config_id and c["user_id"] == user_id),
+        (c for c in configs if c["id"] == config_id and c["user_id"] == user_id),
         None,
     )
     if not target:
@@ -184,13 +184,13 @@ def seek_replay(req: SeekRequest):
         event = replay.events[i]
         new_notifs, updated, resolved = replay._engine.process_event(event, configs)
         for n in new_notifs:
-            active[n["notification_id"]] = n
+            active[n["id"]] = n
         for n in updated:
-            if n["notification_id"] in active:
-                active[n["notification_id"]]["last_seen_at"] = n["last_seen_at"]
+            if n["id"] in active:
+                active[n["id"]]["last_seen_at"] = n["last_seen_at"]
         for r in resolved:
             history.append(r)
-            active.pop(r["notification_id"], None)
+            active.pop(r["id"], None)
 
     store.bulk_write_seek(list(active.values()), history)
     replay.current_index = idx
