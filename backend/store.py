@@ -2,7 +2,7 @@ import json
 import sqlite3
 from contextlib import contextmanager
 from pathlib import Path
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 _DB = Path(__file__).parent / "data" / "app.db"
 _DATA = Path(__file__).parent / "data"
@@ -25,7 +25,7 @@ def _db():
 
 def _load(row) -> dict:
     d = dict(row)
-    for key in ("manages_queue_ids", "assigned_to_user_ids", "value", "scope", "filter"):
+    for key in ("value", "scope", "filter"):
         if key in d and d[key] is not None:
             try:
                 d[key] = json.loads(d[key])
@@ -43,13 +43,16 @@ def init_db() -> None:
             CREATE TABLE IF NOT EXISTS users (
                 id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
-                role TEXT NOT NULL,
-                manages_queue_ids TEXT
+                role TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS user_queue_memberships (
+                user_id TEXT NOT NULL,
+                queue_id TEXT NOT NULL,
+                PRIMARY KEY (user_id, queue_id)
             );
             CREATE TABLE IF NOT EXISTS notification_configs (
                 id TEXT PRIMARY KEY,
                 user_id TEXT NOT NULL,
-                assigned_to_user_ids TEXT NOT NULL,
                 label TEXT NOT NULL,
                 event_type TEXT NOT NULL,
                 field TEXT NOT NULL,
@@ -59,6 +62,11 @@ def init_db() -> None:
                 scope TEXT,
                 filter TEXT,
                 is_shared INTEGER NOT NULL DEFAULT 0
+            );
+            CREATE TABLE IF NOT EXISTS config_assignments (
+                config_id TEXT NOT NULL,
+                user_id TEXT NOT NULL,
+                PRIMARY KEY (config_id, user_id)
             );
             CREATE TABLE IF NOT EXISTS notifications (
                 id TEXT PRIMARY KEY,
@@ -93,21 +101,35 @@ def init_db() -> None:
         if con.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0:
             users = json.loads((_DATA / "users.json").read_text())
             con.executemany(
-                "INSERT INTO users VALUES (?,?,?,?)",
-                [(u["user_id"], u["name"], u["role"],
-                  json.dumps(u.get("manages_queue_ids"))) for u in users],
+                "INSERT INTO users VALUES (?,?,?)",
+                [(u["user_id"], u["name"], u["role"]) for u in users],
+            )
+            con.executemany(
+                "INSERT INTO user_queue_memberships VALUES (?,?)",
+                [
+                    (u["user_id"], q)
+                    for u in users
+                    for q in (u.get("manages_queue_ids") or [])
+                ],
             )
 
         if con.execute("SELECT COUNT(*) FROM notification_configs").fetchone()[0] == 0:
             configs = json.loads((_DATA / "notification_configs.json").read_text())
             con.executemany(
-                "INSERT INTO notification_configs VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-                [(c["config_id"], c["user_id"],
-                  json.dumps(c["assigned_to_user_ids"]), c["label"],
+                "INSERT INTO notification_configs VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                [(c["config_id"], c["user_id"], c["label"],
                   c["event_type"], c["field"], c["comparator"],
                   json.dumps(c["value"]), c.get("value_mode", "absolute"),
                   json.dumps(c.get("scope")), json.dumps(c.get("filter")),
                   int(c.get("is_shared", False))) for c in configs],
+            )
+            con.executemany(
+                "INSERT INTO config_assignments VALUES (?,?)",
+                [
+                    (c["config_id"], uid)
+                    for c in configs
+                    for uid in c["assigned_to_user_ids"]
+                ],
             )
 
 
@@ -115,32 +137,49 @@ def init_db() -> None:
 
 def get_users() -> List[dict]:
     with _db() as con:
-        return [_load(r) for r in con.execute("SELECT * FROM users")]
+        users = [_load(r) for r in con.execute("SELECT * FROM users")]
+        memberships: Dict[str, List[str]] = {}
+        for r in con.execute("SELECT user_id, queue_id FROM user_queue_memberships"):
+            memberships.setdefault(r["user_id"], []).append(r["queue_id"])
+        for u in users:
+            u["manages_queue_ids"] = memberships.get(u["id"]) or None
+    return users
 
 
 # ── Configs ────────────────────────────────────────────────────────────────────
 
 def get_configs() -> List[dict]:
     with _db() as con:
-        return [_load(r) for r in con.execute("SELECT * FROM notification_configs")]
+        configs = [_load(r) for r in con.execute("SELECT * FROM notification_configs")]
+        assignments: Dict[str, List[str]] = {}
+        for r in con.execute("SELECT config_id, user_id FROM config_assignments"):
+            assignments.setdefault(r["config_id"], []).append(r["user_id"])
+        for c in configs:
+            c["assigned_to_user_ids"] = assignments.get(c["id"], [])
+    return configs
 
 
 def save_config(config: dict) -> None:
     with _db() as con:
         con.execute(
-            "INSERT OR REPLACE INTO notification_configs VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-            (config["id"], config["user_id"],
-             json.dumps(config["assigned_to_user_ids"]), config["label"],
+            "INSERT OR REPLACE INTO notification_configs VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            (config["id"], config["user_id"], config["label"],
              config["event_type"], config["field"], config["comparator"],
              json.dumps(config["value"]), config.get("value_mode", "absolute"),
              json.dumps(config.get("scope")), json.dumps(config.get("filter")),
              int(config.get("is_shared", False))),
+        )
+        con.execute("DELETE FROM config_assignments WHERE config_id = ?", (config["id"],))
+        con.executemany(
+            "INSERT INTO config_assignments VALUES (?,?)",
+            [(config["id"], uid) for uid in config.get("assigned_to_user_ids", [])],
         )
 
 
 def delete_config(config_id: str) -> None:
     with _db() as con:
         con.execute("DELETE FROM notification_configs WHERE id = ?", (config_id,))
+        con.execute("DELETE FROM config_assignments WHERE config_id = ?", (config_id,))
 
 
 # ── Active notifications ────────────────────────────────────────────────────────
@@ -188,7 +227,6 @@ def mark_notification_read(notif_id: str, user_id: str) -> Optional[dict]:
 
 
 def resolve_notification(notif: dict) -> None:
-    """Move a notification from the active inbox to history."""
     with _db() as con:
         con.execute("DELETE FROM notifications WHERE id = ?", (notif["id"],))
         con.execute(
@@ -202,7 +240,6 @@ def resolve_notification(notif: dict) -> None:
 
 
 def dismiss_notification(notif_id: str, user_id: str) -> Optional[dict]:
-    """User-initiated dismiss: move to history."""
     with _db() as con:
         row = con.execute(
             "SELECT * FROM notifications WHERE id = ? AND user_id = ?",
@@ -245,7 +282,6 @@ def reset_notifications() -> None:
 
 
 def bulk_write_seek(active: List[dict], history: List[dict]) -> None:
-    """Replace all active notifications and history in one transaction (used by seek)."""
     with _db() as con:
         con.execute("DELETE FROM notifications")
         con.execute("DELETE FROM notification_history")
