@@ -44,7 +44,6 @@ def init_db() -> None:
                 user_id TEXT PRIMARY KEY,
                 name TEXT NOT NULL,
                 role TEXT NOT NULL,
-                agent_id TEXT,
                 manages_queue_ids TEXT
             );
             CREATE TABLE IF NOT EXISTS notification_configs (
@@ -94,8 +93,8 @@ def init_db() -> None:
         if con.execute("SELECT COUNT(*) FROM users").fetchone()[0] == 0:
             users = json.loads((_DATA / "users.json").read_text())
             con.executemany(
-                "INSERT INTO users VALUES (?,?,?,?,?)",
-                [(u["user_id"], u["name"], u["role"], u.get("agent_id"),
+                "INSERT INTO users VALUES (?,?,?,?)",
+                [(u["user_id"], u["name"], u["role"],
                   json.dumps(u.get("manages_queue_ids"))) for u in users],
             )
 
