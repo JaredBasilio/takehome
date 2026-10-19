@@ -1,8 +1,8 @@
 [
   {
     "config_id": "cfg_1",
-    "user_id": "u_1",
-    "assigned_to_user_ids": ["u_1"],
+    "user_id": "a_19",
+    "assigned_to_user_ids": ["a_19"],
     "label": "I drift out of adherence",
     "event_type": "adherence_check",
     "field": "in_violation",
@@ -15,8 +15,8 @@
   },
   {
     "config_id": "cfg_2",
-    "user_id": "u_2",
-    "assigned_to_user_ids": ["u_2"],
+    "user_id": "a_07",
+    "assigned_to_user_ids": ["a_07"],
     "label": "I finish a long call (>12 min)",
     "event_type": "agent_state_change",
     "field": "previous_state_duration_sec",
@@ -58,7 +58,7 @@
   {
     "config_id": "cfg_5",
     "user_id": "u_3",
-    "assigned_to_user_ids": ["u_1", "u_2"],
+    "assigned_to_user_ids": ["a_19", "a_07"],
     "label": "Billing queue critically overloaded (>20 tickets)",
     "event_type": "queue_snapshot",
     "field": "tickets_waiting",
