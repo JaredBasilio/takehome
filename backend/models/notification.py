@@ -5,7 +5,7 @@ class Notification(BaseModel):
     id: str
     user_id: str
     config_id: str
-    config_label: str
+    config_label: str  # snapshot at fire time; configs can be renamed/deleted
     triggered_by_event_id: str
     triggered_at: str
     last_seen_at: str
@@ -18,7 +18,7 @@ class NotificationHistoryItem(BaseModel):
     id: str
     user_id: str
     config_id: str
-    config_label: str
+    config_label: str  # snapshot at fire time; configs can be renamed/deleted
     triggered_at: str
     resolved_at: str
     resolved_by_event_id: str
