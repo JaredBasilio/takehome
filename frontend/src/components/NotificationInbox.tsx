@@ -11,7 +11,7 @@ import {
 } from "@mantine/core";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
-import { type Notification, type ReplayStatus, api } from "../api";
+import { type NotificationRecipient, type ReplayStatus, api } from "../api";
 
 function formatTs(ts: string): string {
   return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
@@ -30,7 +30,7 @@ interface Props {
 }
 
 export function NotificationInbox({ userId, replayStatus }: Props) {
-  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [notifications, setNotifications] = useState<NotificationRecipient[]>([]);
 
   useEffect(() => {
     const fetch = async () => {
@@ -45,13 +45,13 @@ export function NotificationInbox({ userId, replayStatus }: Props) {
   const handleMarkRead = async (notifId: string) => {
     await api.notifications.markRead(userId, notifId);
     setNotifications((prev) =>
-      prev.map((n) => (n.id === notifId ? { ...n, read: true } : n))
+      prev.map((n) => (n.notification_id === notifId ? { ...n, read: true } : n))
     );
   };
 
   const handleDismiss = async (notifId: string) => {
     await api.notifications.dismiss(userId, notifId);
-    setNotifications((prev) => prev.filter((n) => n.id !== notifId));
+    setNotifications((prev) => prev.filter((n) => n.notification_id !== notifId));
   };
 
   const unread = notifications.filter((n) => !n.read).length;
@@ -78,15 +78,15 @@ export function NotificationInbox({ userId, replayStatus }: Props) {
 
       <Stack gap="xs">
         {notifications.map((n) => {
-          const isAdherence = n.config_label.toLowerCase().includes("adherence") ||
-            n.message.toLowerCase().includes("adherence");
-          const isSLA = n.message.toLowerCase().includes("sla");
+          const isAdherence = n.notification.config_label.toLowerCase().includes("adherence") ||
+            n.notification.message.toLowerCase().includes("adherence");
+          const isSLA = n.notification.message.toLowerCase().includes("sla");
           const borderColor = isSLA ? "red" : isAdherence ? "orange" : "blue";
           const isUnread = !n.read;
 
           return (
             <Card
-              key={n.id}
+              key={n.notification_id}
               withBorder
               p="sm"
               radius="md"
@@ -99,7 +99,7 @@ export function NotificationInbox({ userId, replayStatus }: Props) {
                 <Box style={{ flex: 1, minWidth: 0 }}>
                   <Group gap="xs" mb={4}>
                     <Badge size="xs" variant="light" color={borderColor}>
-                      {n.config_label}
+                      {n.notification.config_label}
                     </Badge>
                     {n.is_shared && (
                       <Badge size="xs" variant="outline" color="violet">
@@ -115,15 +115,15 @@ export function NotificationInbox({ userId, replayStatus }: Props) {
                     )}
                   </Group>
                   <Text size="sm" fw={isUnread ? 600 : 400}>
-                    {n.message}
+                    {n.notification.message}
                   </Text>
                   <Group gap="md" mt={4}>
                     <Text size="xs" c="dimmed">
-                      Started {formatTs(n.triggered_at)}
+                      Started {formatTs(n.notification.triggered_at)}
                     </Text>
-                    {n.last_seen_at !== n.triggered_at && (
+                    {n.notification.last_seen_at !== n.notification.triggered_at && (
                       <Text size="xs" c="dimmed">
-                        · Active for {durationSince(n.triggered_at, n.last_seen_at)}
+                        · Active for {durationSince(n.notification.triggered_at, n.notification.last_seen_at)}
                       </Text>
                     )}
                   </Group>
@@ -135,7 +135,7 @@ export function NotificationInbox({ userId, replayStatus }: Props) {
                         size="sm"
                         variant="subtle"
                         color="green"
-                        onClick={() => handleMarkRead(n.id)}
+                        onClick={() => handleMarkRead(n.notification_id)}
                       >
                         <IconCheck size={14} />
                       </ActionIcon>
@@ -146,7 +146,7 @@ export function NotificationInbox({ userId, replayStatus }: Props) {
                       size="sm"
                       variant="subtle"
                       color="gray"
-                      onClick={() => handleDismiss(n.id)}
+                      onClick={() => handleDismiss(n.notification_id)}
                     >
                       <IconX size={14} />
                     </ActionIcon>

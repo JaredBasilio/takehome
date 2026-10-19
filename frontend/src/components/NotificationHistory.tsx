@@ -10,7 +10,7 @@ import {
 } from "@mantine/core";
 import { IconChevronDown, IconChevronRight } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
-import { type Notification, type ReplayStatus, api } from "../api";
+import { type NotificationRecipient, type ReplayStatus, api } from "../api";
 
 function formatTs(ts: string): string {
   return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -29,7 +29,7 @@ interface Props {
 }
 
 export function NotificationHistory({ userId, replayStatus }: Props) {
-  const [history, setHistory] = useState<Notification[]>([]);
+  const [history, setHistory] = useState<NotificationRecipient[]>([]);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -70,10 +70,10 @@ export function NotificationHistory({ userId, replayStatus }: Props) {
           </Table.Thead>
           <Table.Tbody>
             {[...history].reverse().map((item) => (
-              <Table.Tr key={item.id}>
+              <Table.Tr key={item.notification_id}>
                 <Table.Td>
                   <Text size="xs" fw={500}>
-                    {item.config_label}
+                    {item.notification.config_label}
                   </Text>
                   {item.is_shared && (
                     <Badge size="xs" variant="outline" color="violet" mt={2}>
@@ -82,11 +82,11 @@ export function NotificationHistory({ userId, replayStatus }: Props) {
                   )}
                 </Table.Td>
                 <Table.Td>
-                  <Text size="xs">{item.message}</Text>
+                  <Text size="xs">{item.notification.message}</Text>
                 </Table.Td>
                 <Table.Td>
                   <Text size="xs" c="dimmed">
-                    {formatTs(item.triggered_at)}
+                    {formatTs(item.notification.triggered_at)}
                   </Text>
                 </Table.Td>
                 <Table.Td>
@@ -100,7 +100,7 @@ export function NotificationHistory({ userId, replayStatus }: Props) {
                   <Text size="xs" c="dimmed">
                     {item.resolved_by_event_id === "user_dismissed"
                       ? "—"
-                      : durationBetween(item.triggered_at, item.resolved_at ?? "")}
+                      : durationBetween(item.notification.triggered_at, item.resolved_at ?? "")}
                   </Text>
                 </Table.Td>
               </Table.Tr>
