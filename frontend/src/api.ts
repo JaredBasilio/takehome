@@ -12,7 +12,7 @@ export interface NotificationScope {
 
 export interface NotificationConfig {
   id: string;
-  user_id: string;
+  owner_id: string;
   assigned_to_recipient_ids: string[];
   label: string;
   event_type: string;
