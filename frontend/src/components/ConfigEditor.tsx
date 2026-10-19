@@ -90,7 +90,7 @@ export function ConfigEditor({ user }: Props) {
 
   const ownedConfigs = configs.filter((c) => c.user_id === user.id);
   const sharedToMe = configs.filter(
-    (c) => c.user_id !== user.id && c.assigned_to_user_ids.includes(user.id)
+    (c) => c.user_id !== user.id && c.assigned_to_recipient_ids.includes(user.id)
   );
 
   const openCreate = () => {
@@ -368,7 +368,7 @@ function ConfigRow({ config, isOwner, canPush, onEdit, onDelete, onPush }: RowPr
       </Table.Td>
       <Table.Td>
         <Text size="xs" c="dimmed">
-          {config.assigned_to_user_ids.length} user{config.assigned_to_user_ids.length !== 1 ? "s" : ""}
+          {config.assigned_to_recipient_ids.length} user{config.assigned_to_recipient_ids.length !== 1 ? "s" : ""}
         </Text>
       </Table.Td>
       <Table.Td>
