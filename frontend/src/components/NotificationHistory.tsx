@@ -10,7 +10,7 @@ import {
 } from "@mantine/core";
 import { IconChevronDown, IconChevronRight } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
-import { type NotificationHistoryItem, type ReplayStatus, api } from "../api";
+import { type Notification, type ReplayStatus, api } from "../api";
 
 function formatTs(ts: string): string {
   return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
@@ -29,7 +29,7 @@ interface Props {
 }
 
 export function NotificationHistory({ userId, replayStatus }: Props) {
-  const [history, setHistory] = useState<NotificationHistoryItem[]>([]);
+  const [history, setHistory] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -93,14 +93,14 @@ export function NotificationHistory({ userId, replayStatus }: Props) {
                   <Text size="xs" c="dimmed">
                     {item.resolved_by_event_id === "user_dismissed"
                       ? "Dismissed"
-                      : formatTs(item.resolved_at)}
+                      : formatTs(item.resolved_at ?? "")}
                   </Text>
                 </Table.Td>
                 <Table.Td>
                   <Text size="xs" c="dimmed">
                     {item.resolved_by_event_id === "user_dismissed"
                       ? "—"
-                      : durationBetween(item.triggered_at, item.resolved_at)}
+                      : durationBetween(item.triggered_at, item.resolved_at ?? "")}
                   </Text>
                 </Table.Td>
               </Table.Tr>
