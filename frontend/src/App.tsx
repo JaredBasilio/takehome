@@ -72,8 +72,8 @@ export default function App() {
               </Title>
               <Text size="sm" c="dimmed" tt="capitalize">
                 {activeUser.role.replace(/_/g, " ")}
-                {activeUser.manages_queue_ids
-                  ? ` · queues: ${activeUser.manages_queue_ids.join(", ")}`
+                {activeUser.queue_memberships.length > 0
+                  ? ` · queues: ${activeUser.queue_memberships.map((m) => m.queue_id).join(", ")}`
                   : ""}
               </Text>
             </Box>

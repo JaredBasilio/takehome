@@ -1,8 +1,14 @@
+export interface UserQueueMembership {
+  queue_id: string;
+  // Future: capacity_weight?: number;
+  // Future: role_in_queue?: string;
+}
+
 export interface User {
   id: string;
   name: string;
   role: "agent" | "team_lead" | "head_of_support";
-  manages_queue_ids: string[] | null;
+  queue_memberships: UserQueueMembership[];
 }
 
 export interface NotificationScope {
