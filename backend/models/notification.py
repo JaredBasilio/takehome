@@ -16,7 +16,15 @@ class Notification(BaseModel):
 
 
 class NotificationHistoryItem(BaseModel):
-    """A resolved notification. Created when the condition clears or the user dismisses it."""
+    """
+    A resolved notification, written when a condition clears or a user manually dismisses it.
+
+    Notifications start in the active inbox (Notification). Once the condition is no longer
+    true — e.g. the queue drops below the threshold, the agent returns to adherence — the
+    notification moves here with a resolved_at timestamp. This lets you look back at what
+    happened during a shift ("billing queue was overloaded 09:25–09:40") without cluttering
+    the live inbox. Manual dismissals also land here, with resolved_by_event_id = "user_dismissed".
+    """
     id: str
     user_id: str
     config_id: str
