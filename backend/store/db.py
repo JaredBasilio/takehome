@@ -64,8 +64,8 @@ def init_db() -> None:
             );
             CREATE TABLE IF NOT EXISTS config_assignments (
                 config_id TEXT NOT NULL,
-                user_id TEXT NOT NULL,
-                PRIMARY KEY (config_id, user_id)
+                recipient_id TEXT NOT NULL,
+                PRIMARY KEY (config_id, recipient_id)
             );
             CREATE TABLE IF NOT EXISTS notifications (
                 id TEXT PRIMARY KEY,
@@ -120,6 +120,6 @@ def init_db() -> None:
                 [
                     (c["config_id"], uid)
                     for c in configs
-                    for uid in c["assigned_to_user_ids"]
+                    for uid in c["assigned_to_recipient_ids"]
                 ],
             )

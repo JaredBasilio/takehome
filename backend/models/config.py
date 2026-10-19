@@ -10,7 +10,7 @@ class NotificationScope(BaseModel):
 class NotificationConfig(BaseModel):
     id: str
     user_id: str
-    assigned_to_user_ids: List[str]
+    assigned_to_recipient_ids: List[str]
     label: str
     event_type: str  # "queue_snapshot" | "agent_state_change" | "adherence_check"
     field: str

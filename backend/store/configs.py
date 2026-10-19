@@ -8,10 +8,10 @@ def get_configs() -> List[dict]:
     with _db() as con:
         configs = [_load(r) for r in con.execute("SELECT * FROM notification_configs")]
         assignments: Dict[str, List[str]] = {}
-        for r in con.execute("SELECT config_id, user_id FROM config_assignments"):
-            assignments.setdefault(r["config_id"], []).append(r["user_id"])
+        for r in con.execute("SELECT config_id, recipient_id FROM config_assignments"):
+            assignments.setdefault(r["config_id"], []).append(r["recipient_id"])
         for c in configs:
-            c["assigned_to_user_ids"] = assignments.get(c["id"], [])
+            c["assigned_to_recipient_ids"] = assignments.get(c["id"], [])
     return configs
 
 
@@ -28,7 +28,7 @@ def save_config(config: dict) -> None:
         con.execute("DELETE FROM config_assignments WHERE config_id = ?", (config["id"],))
         con.executemany(
             "INSERT INTO config_assignments VALUES (?,?)",
-            [(config["id"], uid) for uid in config.get("assigned_to_user_ids", [])],
+            [(config["id"], uid) for uid in config.get("assigned_to_recipient_ids", [])],
         )
 
 
